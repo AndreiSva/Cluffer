@@ -27,8 +27,8 @@
                    with worklist = (list node)
                    while worklist
                    do (let* ((node  (pop worklist))
-                             (left  (bt:left node))
-                             (right (bt:right node)))
+                             (left  (clump-binary-tree:left node))
+                             (right (clump-binary-tree:right node)))
                         (incf count)
                         (unless (null left)
                           (push left worklist))
@@ -42,12 +42,12 @@
           do (destructuring-bind (node . right-child-p) element
                (when right-child-p
                  (incf count)
-                 (let ((left (bt:left node)))
+                 (let ((left (clump-binary-tree:left node)))
                    (unless (null left)
                      (incf count (total-line-count left)))))
-               (let ((parent (bt:parent node)))
+               (let ((parent (clump-binary-tree:parent node)))
                  (unless (null parent)
-                   (push (cons parent (eq node (bt:right parent)))
+                   (push (cons parent (eq node (clump-binary-tree:right parent)))
                          worklist))))
           finally (return (1- count)))))
 

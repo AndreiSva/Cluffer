@@ -1,46 +1,46 @@
 (cl:in-package #:cluffer-standard-buffer)
 
-(defmethod (setf bt:left) :before (new-left (node node))
+(defmethod (setf clump-binary-tree:left) :before (new-left (node node))
   (declare (ignore new-left))
-  (let ((left (bt:left node)))
+  (let ((left (clump-binary-tree:left node)))
     (unless (null left)
       (decf (line-count node) (line-count left))
       (decf (item-count node) (item-count left))
       (setf (max-modify-time node)
             (max (modify-time node)
-                 (let ((right (bt:right node)))
+                 (let ((right (clump-binary-tree:right node)))
                    (if (null right)
                        0
                        (max-modify-time right))))))))
 
-(defmethod (setf bt:left) :after ((new-left node) (node node))
+(defmethod (setf clump-binary-tree:left) :after ((new-left node) (node node))
   (incf (line-count node) (line-count new-left))
   (incf (item-count node) (item-count new-left))
   (setf (max-modify-time node)
         (max (max-modify-time node)
              (max-modify-time new-left))))
 
-(defmethod (setf bt:right) :before (new-right (node node))
+(defmethod (setf clump-binary-tree:right) :before (new-right (node node))
   (declare (ignore new-right))
-  (let ((right (bt:right node)))
+  (let ((right (clump-binary-tree:right node)))
     (unless (null right)
       (decf (line-count node) (line-count right))
       (decf (item-count node) (item-count right))
       (setf (max-modify-time node)
             (max (modify-time node)
-                 (let ((left (bt:left node)))
+                 (let ((left (clump-binary-tree:left node)))
                    (if (null left)
                        0
                        (max-modify-time left))))))))
 
-(defmethod (setf bt:right) :after ((new-right node) (node node))
+(defmethod (setf clump-binary-tree:right) :after ((new-right node) (node node))
   (incf (line-count node) (line-count new-right))
   (incf (item-count node) (item-count new-right))
   (setf (max-modify-time node)
         (max (max-modify-time node)
              (max-modify-time new-right))))
 
-(defmethod bt:splay :after ((node node))
+(defmethod clump-binary-tree:splay :after ((node node))
   (setf (contents (cluffer-internal:buffer node)) node))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -68,8 +68,8 @@
 (defmethod cluffer:find-line ((buffer buffer) line-number)
   (loop with node = (contents buffer)
         with relative-line-number = line-number
-        for left = (bt:left node)
-        for right = (bt:right node)
+        for left = (clump-binary-tree:left node)
+        for right = (clump-binary-tree:right node)
         for left-count = (if (null left) 0 (line-count left))
         until (= relative-line-number left-count)
         do (if (< relative-line-number left-count)
@@ -84,8 +84,8 @@
 
 (defmethod cluffer-internal:buffer-line-number
     ((buffer buffer) (node node) line)
-  (bt:splay node)
-  (let ((left (bt:left node)))
+  (clump-binary-tree:splay node)
+  (let ((left (clump-binary-tree:left node)))
     (if (null left)
         0
         (line-count left))))
@@ -100,7 +100,7 @@
         ;; line and also the number of items of the new line.
         (diff (- (cluffer:item-count line) position)))
     ;; Make sure the existing line is the root of the tree.
-    (bt:splay dock)
+    (clump-binary-tree:splay dock)
     (decf (item-count dock) diff)
     (let ((time (incf (current-time buffer))))
       (setf (modify-time dock)     time
@@ -115,10 +115,10 @@
                                           :max-modify-time time
                                           :line new-line)))
       (setf (cluffer-internal:dock new-line) new-node)
-      (let ((right-node (bt:right dock)))
-        (setf (bt:right dock)     nil
-              (bt:left new-node)  dock
-              (bt:right new-node) right-node
+      (let ((right-node (clump-binary-tree:right dock)))
+        (setf (clump-binary-tree:right dock)     nil
+              (clump-binary-tree:left new-node)  dock
+              (clump-binary-tree:right new-node) right-node
               (contents buffer)   new-node))))
   nil)
 
@@ -131,17 +131,17 @@
   (let* ((line-number    (cluffer:line-number line))
          (next-line      (cluffer:find-line buffer (1+ line-number)))
          (node-next-line (cluffer-internal:dock next-line)))
-    (bt:splay node-next-line)
-    (bt:splay dock)
+    (clump-binary-tree:splay node-next-line)
+    (clump-binary-tree:splay dock)
     ;; Now LINE is on top and NEXT-LINE is its right child.
     ;; Furthermore NEXT-LINE does not have any left children.
     (let ((time (incf (current-time buffer))))
       (setf (modify-time     dock) time
             (max-modify-time dock) time))
-    (let ((right (bt:right node-next-line)))
-      (setf (bt:right dock) nil)
+    (let ((right (clump-binary-tree:right node-next-line)))
+      (setf (clump-binary-tree:right dock) nil)
       (incf (item-count dock) (cluffer:item-count next-line))
-      (setf (bt:right node-next-line) nil
-            (bt:right dock)           right))
+      (setf (clump-binary-tree:right node-next-line) nil
+            (clump-binary-tree:right dock)           right))
     (cluffer-internal:line-join-line line next-line))
   nil)
